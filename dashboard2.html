@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>米国 暗号資産ETF ダッシュボード 2026 | Nomura Style</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg:      #F0F2F5;
+      --card:    #FFFFFF;
+      --border:  #DCDCDC;
+      --navy:    #0D1F3C;
+      --navy2:   #162B52;
+      --red:     #CA142A;
+      --red-lt:  #F5E6E8;
+      --gold:    #B8960C;
+      --green:   #1A6B3C;
+      --green-lt:#E6F3EC;
+      --text:    #1A1A1A;
+      --muted:   #6B7280;
+      --muted2:  #9CA3AF;
+      --accent1: #CA142A;
+      --accent2: #0D1F3C;
+      --accent3: #B8960C;
+      --accent4: #1A6B3C;
+      --stripe:  #F8F9FA;
+      --hover:   #FEF2F2;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'ヒラギノ角ゴ ProN W3', Meiryo, sans-serif;
+      min-height: 100vh;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    /* ══ TOP RIBBON ══ */
+    .top-ribbon {
+      background: var(--red);
+      height: 4px;
+    }
+
+    /* ══ STATUS BAR ══ */
+    #statusBar {
+      background: var(--navy);
+      padding: 6px 32px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      font-size: 0.72rem;
+      flex-wrap: wrap;
+      color: rgba(255,255,255,0.7);
+    }
+    #statusBar .status-item { display: flex; align-items: center; gap: 5px; }
+    #statusBar .status-item strong { color: #fff; font-weight: 500; }
+    .live-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: #4ADE80;
+      box-shadow: 0 0 5px #4ADE80;
+      animation: pulse 2s infinite;
+      flex-shrink: 0;
+    }
+    .live-dot.fetching { background: #FCD34D; box-shadow: 0 0 5px #FCD34D; }
+    .live-dot.error    { background: #F87171; box-shadow: 0 0 5px #F87171; animation: none; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    #countdown { margin-left: auto; color: rgba(255,255,255,0.6); font-size: 0.72rem; }
+    #countdownNum { color: #FCD34D; font-weight: 700; }
+
+    /* ══ HEADER ══ */
+    header {
+      background: var(--navy);
+      padding: 0 32px;
+      display: flex;
+      align-items: stretch;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0;
+      border-bottom: 3px solid var(--red);
+    }
+    .header-left {
+      padding: 20px 0;
+    }
+    .header-left .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 4px;
+    }
+    .brand-mark {
+      width: 36px; height: 36px;
+      background: var(--red);
+      border-radius: 2px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; font-weight: 900; color: #fff;
+      flex-shrink: 0;
+    }
+    .header-left h1 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 0.01em;
+    }
+    .header-left h1 span { color: #FCD34D; }
+    .header-left p { font-size: 0.72rem; color: rgba(255,255,255,0.55); margin-top: 2px; }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 16px 0;
+    }
+
+    /* ══ CURRENCY TOGGLE ══ */
+    .currency-toggle {
+      display: flex;
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-right: 4px;
+    }
+    .currency-toggle button {
+      padding: 5px 14px;
+      font-size: 0.73rem;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      transition: all 0.15s;
+      color: rgba(255,255,255,0.6);
+      background: transparent;
+      font-family: inherit;
+    }
+    .currency-toggle button.active { background: var(--red); color: #fff; }
+    .currency-toggle button:hover:not(.active) { background: rgba(255,255,255,0.1); color: #fff; }
+
+    /* ══ REFRESH BTN ══ */
+    #refreshBtn {
+      padding: 5px 14px;
+      font-size: 0.73rem;
+      font-weight: 700;
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 3px;
+      cursor: pointer;
+      background: transparent;
+      color: rgba(255,255,255,0.8);
+      transition: all 0.15s;
+      margin-right: 6px;
+      font-family: inherit;
+    }
+    #refreshBtn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+    #refreshBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ══ PILLS / FILTER ══ */
+    .pill {
+      padding: 4px 12px;
+      border-radius: 2px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      border: 1px solid;
+      cursor: pointer;
+      transition: all 0.15s;
+      background: transparent;
+      font-family: inherit;
+    }
+    .pill-all  { border-color: rgba(255,255,255,0.4); color: rgba(255,255,255,0.7); }
+    .pill-spot { border-color: #FCD34D; color: #FCD34D; }
+    .pill-fut  { border-color: #93C5FD; color: #93C5FD; }
+    .pill-alt  { border-color: #86EFAC; color: #86EFAC; }
+    .pill.inactive { opacity: 0.3; }
+    .pill:hover { opacity: 1; }
+    .pill-all.active  { background: rgba(255,255,255,0.15); color: #fff; }
+    .pill-spot.active { background: rgba(252,211,77,0.2); }
+    .pill-fut.active  { background: rgba(147,197,253,0.2); }
+    .pill-alt.active  { background: rgba(134,239,172,0.2); }
+
+    /* ══ NAV BAR ══ */
+    .nav-bar {
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      padding: 0 32px;
+      display: flex;
+      gap: 0;
+    }
+    .nav-item {
+      padding: 12px 20px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--muted);
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .nav-item:hover { color: var(--navy); border-bottom-color: var(--border); }
+    .nav-item.active { color: var(--red); border-bottom-color: var(--red); font-weight: 700; }
+
+    /* ══ MAIN ══ */
+    main { padding: 24px 32px; }
+
+    /* ══ SECTION TITLE ══ */
+    .section-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .section-title::before {
+      content: '';
+      display: inline-block;
+      width: 3px; height: 16px;
+      border-radius: 1px;
+    }
+    .section-title.red::before   { background: var(--red); }
+    .section-title.navy::before  { background: var(--navy); }
+    .section-title.gold::before  { background: var(--gold); }
+    .section-title.green::before { background: var(--green); }
+
+    /* ══ SUMMARY CARDS ══ */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .sum-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      padding: 16px 18px;
+      border-top: 3px solid var(--border);
+      transition: border-top-color 0.2s, box-shadow 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .sum-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .sum-card.accent-red   { border-top-color: var(--red); }
+    .sum-card.accent-navy  { border-top-color: var(--navy); }
+    .sum-card.accent-gold  { border-top-color: var(--gold); }
+    .sum-card.accent-green { border-top-color: var(--green); }
+    .sum-card .label {
+      font-size: 0.68rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      font-weight: 500;
+    }
+    .sum-card .value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-top: 6px;
+      color: var(--text);
+      line-height: 1.2;
+    }
+    .sum-card .sub { font-size: 0.72rem; color: var(--muted); margin-top: 5px; }
+    .badge {
+      display: inline-block;
+      padding: 1px 6px;
+      border-radius: 2px;
+      font-size: 0.67rem;
+      font-weight: 700;
+      margin-left: 4px;
+    }
+    .badge-green { background: var(--green-lt); color: var(--green); }
+    .badge-red   { background: var(--red-lt);   color: var(--red); }
+
+    /* flash animation */
+    .val-up   { animation: flashUp   0.7s ease; }
+    .val-down { animation: flashDown 0.7s ease; }
+    @keyframes flashUp   { 0%{color:var(--green)} 100%{color:inherit} }
+    @keyframes flashDown { 0%{color:var(--red)}   100%{color:inherit} }
+
+    /* ══ CHARTS ══ */
+    .charts-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    @media(max-width:800px){ .charts-row{grid-template-columns:1fr;} }
+    .chart-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      padding: 18px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .chart-card canvas { max-height: 220px; }
+    .inflow-section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      padding: 18px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .inflow-section canvas { max-height: 180px; }
+
+    /* ══ TABLE ══ */
+    .table-section { margin-bottom: 28px; }
+    .table-wrapper { overflow-x: auto; border: 1px solid var(--border); border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; background: var(--card); }
+    thead tr { background: var(--navy); }
+    th {
+      padding: 10px 14px;
+      text-align: left;
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: rgba(255,255,255,0.8);
+      font-weight: 600;
+      white-space: nowrap;
+      border-right: 1px solid rgba(255,255,255,0.08);
+    }
+    th:last-child { border-right: none; }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background 0.12s; }
+    tbody tr:nth-child(even) { background: var(--stripe); }
+    tbody tr:hover { background: var(--hover); }
+    td { padding: 10px 14px; vertical-align: middle; white-space: nowrap; color: var(--text); }
+    tr.hidden-row { display: none; }
+
+    /* price cell */
+    td.price-cell { font-weight: 700; font-variant-numeric: tabular-nums; }
+    td.price-cell.up      { color: var(--green); }
+    td.price-cell.down    { color: var(--red); }
+    td.price-cell.neutral { color: var(--text); }
+
+    /* ticker badges */
+    .ticker {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 2px;
+      font-weight: 700;
+      font-size: 0.76rem;
+      letter-spacing: 0.03em;
+    }
+    .ticker-btc { background: #FEF3C7; color: #92400E; border: 1px solid #FDE68A; }
+    .ticker-eth { background: #EDE9FE; color: #4C1D95; border: 1px solid #DDD6FE; }
+    .ticker-sol { background: #F0FDF4; color: #14532D; border: 1px solid #BBF7D0; }
+    .ticker-xrp { background: #E0F2FE; color: #075985; border: 1px solid #BAE6FD; }
+    .ticker-ltc { background: #F1F5F9; color: #334155; border: 1px solid #CBD5E1; }
+    .ticker-fut { background: #FFF7ED; color: #9A3412; border: 1px solid #FED7AA; }
+    .ticker-gry { background: #F8FAFC; color: #475569; border: 1px solid #E2E8F0; }
+
+    /* type badges */
+    .type-badge {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 2px;
+      font-size: 0.66rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+    }
+    .type-spot { background: var(--red-lt);   color: var(--red);   border: 1px solid #F5C2C7; }
+    .type-fut  { background: #EFF6FF;          color: #1D4ED8;      border: 1px solid #BFDBFE; }
+    .type-lev  { background: #FEF2F2;          color: #991B1B;      border: 1px solid #FECACA; }
+    .type-inv  { background: #F0FDFA;          color: #134E4A;      border: 1px solid #99F6E4; }
+
+    /* AUM bar */
+    .aum-bar-wrap { display: flex; align-items: center; gap: 8px; }
+    .aum-bar { flex: 1; min-width: 50px; max-width: 100px; height: 4px; border-radius: 2px; background: var(--border); overflow: hidden; }
+    .aum-bar-fill { height: 100%; border-radius: 2px; }
+
+    /* ══ ASSET DISTRIBUTION ══ */
+    .asset-dist {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .asset-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      padding: 14px 16px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+    .asset-card .asset-name { font-size: 0.72rem; color: var(--muted); font-weight: 500; }
+    .asset-card .asset-val  { font-size: 1.2rem; font-weight: 700; margin-top: 4px; }
+    .asset-card .asset-bar  { margin-top: 8px; height: 3px; border-radius: 2px; background: var(--border); overflow: hidden; }
+    .asset-card .asset-bar-fill { height: 100%; border-radius: 2px; }
+
+    /* ══ NOTES ══ */
+    .notes-wrap {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      padding: 18px 20px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .notes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      font-size: 0.8rem;
+      line-height: 1.65;
+      color: var(--text);
+    }
+    .notes-grid div { padding-left: 12px; border-left: 2px solid var(--border); }
+
+    /* ══ FOOTER ══ */
+    footer {
+      background: var(--navy);
+      color: rgba(255,255,255,0.5);
+      text-align: center;
+      padding: 16px 32px;
+      font-size: 0.68rem;
+    }
+    footer a { color: rgba(255,255,255,0.7); text-decoration: none; }
+    footer a:hover { color: #fff; text-decoration: underline; }
+
+    /* ══ DIVIDER ══ */
+    .divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+    /* ══ RESPONSIVE ══ */
+    @media(max-width:600px){
+      main { padding: 14px 16px; }
+      header { padding: 0 16px; }
+      #statusBar { padding: 5px 16px; }
+      .nav-bar { padding: 0 16px; overflow-x: auto; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOP RIBBON -->
+<div class="top-ribbon"></div>
+
+<!-- STATUS BAR -->
+<div id="statusBar">
+  <div class="status-item">
+    <div class="live-dot" id="liveDot"></div>
+    <span id="statusText">接続中...</span>
+  </div>
+  <div class="status-item">最終更新: <strong id="lastUpdated">—</strong></div>
+  <div class="status-item">BTC: <strong id="sbBtc">—</strong></div>
+  <div class="status-item">ETH: <strong id="sbEth">—</strong></div>
+  <div class="status-item">SOL: <strong id="sbSol">—</strong></div>
+  <div class="status-item">USD/JPY: <strong id="sbJpy">—</strong></div>
+  <div id="countdown">次回更新まで <span id="countdownNum">—</span> 分</div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="header-left">
+    <div class="brand">
+      <div class="brand-mark">₿</div>
+      <div>
+        <h1>米国 <span>暗号資産ETF</span> ダッシュボード</h1>
+        <p>現物 (Spot) ＋ 先物 (Futures) ＋ アルトコイン ／ リアルタイム価格・為替連動 ／ 2026</p>
+      </div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="currency-toggle">
+      <button id="btnUSD" class="active" onclick="setCurrency('USD')">$ USD</button>
+      <button id="btnJPY" onclick="setCurrency('JPY')">¥ JPY</button>
+    </div>
+    <button id="refreshBtn" onclick="fetchAll(true)">⟳ 今すぐ更新</button>
+    <button class="pill pill-all active" onclick="filterRows('all')">すべて</button>
+    <button class="pill pill-spot" onclick="filterRows('spot')">現物</button>
+    <button class="pill pill-fut"  onclick="filterRows('futures')">先物</button>
+    <button class="pill pill-alt"  onclick="filterRows('alt')">アルトコイン</button>
+  </div>
+</header>
+
+<!-- NAV BAR -->
+<div class="nav-bar">
+  <div class="nav-item active">マーケット概況</div>
+  <div class="nav-item">BTC現物ETF</div>
+  <div class="nav-item">ETH現物ETF</div>
+  <div class="nav-item">先物ETF</div>
+  <div class="nav-item">アルトコイン</div>
+</div>
+
+<!-- MAIN -->
+<main>
+
+  <!-- Summary Cards -->
+  <div class="summary-grid">
+    <div class="sum-card accent-red">
+      <div class="label">暗号資産ETF 総AUM</div>
+      <div class="value" id="val-totalAum">—</div>
+      <div class="sub">BTC Spot + ETH Spot + 先物 合算</div>
+    </div>
+    <div class="sum-card accent-navy">
+      <div class="label">IBIT (BlackRock) AUM</div>
+      <div class="value" id="val-ibitAum" style="color:var(--navy)">—</div>
+      <div class="sub">BTC保有量 761,802 BTC</div>
+    </div>
+    <div class="sum-card accent-gold">
+      <div class="label">BTC 現在価格 <span style="font-size:0.6rem;color:var(--green);font-weight:700">● LIVE</span></div>
+      <div class="value" id="val-btcPrice" style="color:var(--gold)">—</div>
+      <div class="sub" id="sub-btcChg">24h変化: 読込中...</div>
+    </div>
+    <div class="sum-card accent-navy">
+      <div class="label">ETH 現在価格 <span style="font-size:0.6rem;color:var(--green);font-weight:700">● LIVE</span></div>
+      <div class="value" id="val-ethPrice" style="color:var(--navy)">—</div>
+      <div class="sub" id="sub-ethChg">24h変化: 読込中...</div>
+    </div>
+    <div class="sum-card accent-green">
+      <div class="label">SOL 現在価格 <span style="font-size:0.6rem;color:var(--green);font-weight:700">● LIVE</span></div>
+      <div class="value" id="val-solPrice" style="color:var(--green)">—</div>
+      <div class="sub" id="sub-solChg">24h変化: 読込中...</div>
+    </div>
+    <div class="sum-card accent-red">
+      <div class="label">USD/JPY レート <span style="font-size:0.6rem;color:var(--green);font-weight:700">● LIVE</span></div>
+      <div class="value" id="val-jpyRate" style="color:var(--red)">—</div>
+      <div class="sub" id="sub-jpyChg">為替変化: 読込中...</div>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="charts-row">
+    <div class="chart-card">
+      <div class="section-title red">現物BTC ETF AUM 分布</div>
+      <canvas id="aumChart"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="section-title navy">BTC保有量ランキング（ETF別）</div>
+      <canvas id="holdingsChart"></canvas>
+    </div>
+  </div>
+
+  <div class="inflow-section">
+    <div class="section-title gold">スポットBTC ETF 月別純流入（2024〜2026年1月） 単位: 億ドル</div>
+    <canvas id="inflowChart"></canvas>
+  </div>
+
+  <!-- ETF Table -->
+  <div class="table-section">
+    <div class="section-title red" style="margin-bottom:10px;">全ETF一覧（現物・先物・アルトコイン）</div>
+    <div class="table-wrapper">
+      <table id="mainTable">
+        <thead>
+          <tr>
+            <th>ティッカー</th>
+            <th>ETF名</th>
+            <th>運用会社</th>
+            <th>種別</th>
+            <th>AUM</th>
+            <th>原資産価格（LIVE）</th>
+            <th>保有量</th>
+            <th>経費率</th>
+            <th>カストディアン</th>
+            <th>上場開始</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Spot BTC -->
+          <tr data-type="spot" data-asset="bitcoin">
+            <td><span class="ticker ticker-btc">IBIT</span></td>
+            <td>iShares Bitcoin Trust ETF</td><td>BlackRock</td>
+            <td><span class="type-badge type-spot">BTC現物</span></td>
+            <td><div class="aum-bar-wrap"><strong id="aum-IBIT">$54.1B</strong><div class="aum-bar"><div class="aum-bar-fill" style="width:100%;background:var(--red)"></div></div></div></td>
+            <td class="price-cell neutral" id="price-IBIT">—</td>
+            <td>761,802 BTC</td><td>0.25%</td><td>Coinbase Custody</td><td>2024/01/11</td>
+          </tr>
+          <tr data-type="spot" data-asset="bitcoin">
+            <td><span class="ticker ticker-btc">FBTC</span></td>
+            <td>Fidelity Wise Origin Bitcoin Fund</td><td>Fidelity</td>
+            <td><span class="type-badge type-spot">BTC現物</span></td>
+            <td><div class="aum-bar-wrap"><strong id="aum-FBTC">$12.0B</strong><div class="aum-bar"><div class="aum-bar-fill" style="width:22%;background:var(--red)"></div></div></div></td>
+            <td class="price-cell neutral" id="price-FBTC">—</td>
+            <td>189,011 BTC</td><td>0.25%</td><td>Fidelity Digital Assets</td><td>2024/01/11</td>
+          </tr>
+          <tr data-type="spot" data-asset="bitcoin">
+            <td><span class="ticker ticker-gry">GBTC</span></td>
+            <td>Grayscale Bitcoin Trust ETF</td><td>Grayscale</td>
+            <td><span class="type-badge type-spot">BTC現物</span></td>
+            <td><div class="aum-bar-wrap"><strong id="aum-GBTC">~$10.5B</strong><div class="aum-bar"><div class="aum-bar-fill" style="width:19%;background:#6B7280"></div></div></div></td>
+            <td class="price-cell neutral" id="price-GBTC">—</td>
+            <td>156,719 BTC</td><td>1.50%</td><td>Coinbase Custody</td><td>2024/01/11</td>
+          </tr>
+          <tr data-type="spot" data-asset="bitcoin">
+            <td><span class="ticker ticker-btc">ARKB</span></td>
+            <td>ARK 21Shares Bitcoin ETF</td><td>ARK / 21Shares</td>
+            <td><span class="type-badge type-spot">BTC現物</span></td>
+            <td><div class="aum-bar-wrap"><strong id="aum-ARKB">$2.4B</strong><div class="aum-bar"><div class="aum-bar-fill" style="width:4.4%;background:var(--red)"></div></div></div></td>
+            <td class="price-cell neutral" id="price-ARKB">—</td>
+            <td>35,502 BTC</td><td>0.21%</td><td>Coinbase Custody</td><td>2024/01/11</td>
+          </tr>
+          <tr data-type="spot" data-asset="bitcoin">
+            <td><span class="ticker ticker-btc">BITB</span></td>
+            <td>Bitwise Bitcoin ETF</td><td>Bitwise</td>
+            <td><span class="type-badge type-spot">BTC現物</span></td>
+            <td><div class="aum-bar-wrap"><strong id="aum-BITB">$2.6B</strong><div class="aum-bar"><div class="aum-bar-fill" style="width:4.8%;background:var(--red)"></div></div></div></td>
+            <td class="price-cell neutral" id="price-BITB">—</td>
+            <td>38,286 BTC</td><td>0.20%</td><td>Coinbase Custody</td><td>2024/01/11</td>
+          </tr>
+          <tr data-type="spot" data-asset="bitcoin">
+            <td><span class="ticker ticker-gry">BTC</span></td>
+            <td>Grayscale Bitcoin Mini Trust</td><td>Grayscale</td>
+            <td><span class="type-badge type-spot">BTC現物</span></td>
+            <td><div class="aum-bar-wrap"><strong id="aum-BTCM">~$3.4B</strong><div class="aum-bar"><div class="aum-bar-fill" style="width:6%;background:#6B7280"></div></div></div></td>
+            <td class="price-cell neutral" id="price-BTCM">—</td>
+            <td>50,223 BTC</td><td>0.15%</td><td>Coinbase Custody</td><td>2024/07/31</td>
+          </tr>
+          <tr data-type="spot" data-asset="bitcoin">
+            <td><span class="ticker ticker-btc">HODL</span></td>
+            <td>VanEck Bitcoin ETF</td><td>VanEck</td>
+            <td><span class="type-badge type-spot">BTC現物</span></td>
+            <td><div class="aum-bar-wrap"><strong id="aum-HODL">$1.1B</strong><div class="aum-bar"><div class="aum-bar-fill" style="width:2%;background:var(--red)"></div></div></div></td>
+            <td class="price-cell neutral" id="price-HODL">—</td>
+            <td>16,298 BTC</td><td>0.25%</td><td>Gemini Trust</td><td>2024/01/11</td>
+          </tr>
+          <tr data-type="spot" data-asset="bitcoin">
+            <td><span class="ticker ticker-btc">BTCO</span></td>
+            <td>Invesco Galaxy Bitcoin ETF</td><td>Invesco/Galaxy</td>
+            <td><span class="type-badge type-spot">BTC現物</span></td>
+            <td><div class="aum-bar-wrap"><strong id="aum-BTCO">~$440M</strong><div class="aum-bar"><div class="aum-bar-fill" style="width:0.8%;background:var(--red)"></div></div></div></td>
+            <td class="price-cell neutral" id="price-BTCO">—</td>
+            <td>6,554 BTC</td><td>0.25%</td><td>Coinbase Custody</td><td>2024/01/11</td>
+          </tr>
+          <tr data-type="spot" data-asset="bitcoin">
+            <td><span class="ticker ticker-btc">BRRR</span></td>
+            <td>CoinShares Valkyrie Bitcoin Fund</td><td>CoinShares</td>
+            <td><span class="type-badge type-spot">BTC現物</span></td>
+            <td><div class="aum-bar-wrap"><strong id="aum-BRRR">$407M</strong><div class="aum-bar"><div class="aum-bar-fill" style="width:0.75%;background:var(--red)"></div></div></div></td>
+            <td class="price-cell neutral" id="price-BRRR">—</td>
+            <td>6,069 BTC</td><td>0.25%</td><td>Coinbase Custody</td><td>2024/01/11</td>
+          </tr>
+          <tr data-type="spot" data-asset="bitcoin">
+            <td><span class="ticker ticker-btc">EZBC</span></td>
+            <td>Franklin Bitcoin ETF</td><td>Franklin Templeton</td>
+            <td><span class="type-badge type-spot">BTC現物</span></td>
+            <td><div class="aum-bar-wrap"><strong id="aum-EZBC">~$394M</strong><div class="aum-bar"><div class="aum-bar-fill" style="width:0.7%;background:var(--red)"></div></div></div></td>
+            <td class="price-cell neutral" id="price-EZBC">—</td>
+            <td>5,871 BTC</td><td>0.19%</td><td>Coinbase Custody</td><td>2024/01/11</td>
+          </tr>
+          <tr data-type="spot" data-asset="bitcoin">
+            <td><span class="ticker ticker-btc">BTCW</span></td>
+            <td>WisdomTree Bitcoin Fund</td><td>WisdomTree</td>
+            <td><span class="type-badge type-spot">BTC現物</span></td>
+            <td><div class="aum-bar-wrap"><strong id="aum-BTCW">~$126M</strong><div class="aum-bar"><div class="aum-bar-fill" style="width:0.23%;background:var(--red)"></div></div></div></td>
+            <td class="price-cell neutral" id="price-BTCW">—</td>
+            <td>1,875 BTC</td><td>0.25%</td><td>Coinbase Custody</td><td>2024/01/11</td>
+          </tr>
+          <!-- Spot ETH -->
+          <tr data-type="spot" data-asset="ethereum">
+            <td><span class="ticker ticker-eth">ETHA</span></td>
+            <td>iShares Ethereum Trust ETF</td><td>BlackRock</td>
+            <td><span class="type-badge type-spot" style="background:#EDE9FE;color:#4C1D95;border-color:#DDD6FE">ETH現物</span></td>
+            <td><div class="aum-bar-wrap"><strong id="aum-ETHA">~$3.8B</strong><div class="aum-bar"><div class="aum-bar-fill" style="width:7%;background:#7C3AED"></div></div></div></td>
+            <td class="price-cell neutral" id="price-ETHA">—</td>
+            <td>— (ETH)</td><td>0.25%</td><td>Coinbase Custody</td><td>2024/07/23</td>
+          </tr>
+          <tr data-type="spot" data-asset="ethereum">
+            <td><span class="ticker ticker-eth">FETH</span></td>
+            <td>Fidelity Ethereum Fund ETF</td><td>Fidelity</td>
+            <td><span class="type-badge type-spot" style="background:#EDE9FE;color:#4C1D95;border-color:#DDD6FE">ETH現物</span></td>
+            <td><div class="aum-bar-wrap"><strong id="aum-FETH">$2.3B</strong><div class="aum-bar"><div class="aum-bar-fill" style="width:4.2%;background:#7C3AED"></div></div></div></td>
+            <td class="price-cell neutral" id="price-FETH">—</td>
+            <td>— (ETH)</td><td>0.25%</td><td>Fidelity Digital Assets</td><td>2024/07/23</td>
+          </tr>
+          <tr data-type="spot" data-asset="ethereum">
+            <td><span class="ticker ticker-gry">ETHE</span></td>
+            <td>Grayscale Ethereum Trust ETF</td><td>Grayscale</td>
+            <td><span class="type-badge type-spot" style="background:#EDE9FE;color:#4C1D95;border-color:#DDD6FE">ETH現物</span></td>
+            <td><div class="aum-bar-wrap"><strong id="aum-ETHE">~$4.6B</strong><div class="aum-bar"><div class="aum-bar-fill" style="width:8.5%;background:#6B7280"></div></div></div></td>
+            <td class="price-cell neutral" id="price-ETHE">—</td>
+            <td>— (ETH)</td><td>2.50%</td><td>Coinbase Custody</td><td>2024/07/23</td>
+          </tr>
+          <!-- Futures -->
+          <tr data-type="futures" data-asset="bitcoin">
+            <td><span class="ticker ticker-fut">BITO</span></td>
+            <td>ProShares Bitcoin Strategy ETF</td><td>ProShares</td>
+            <td><span class="type-badge type-fut">BTC先物</span></td>
+            <td><div class="aum-bar-wrap"><strong id="aum-BITO">~$1.5B</strong><div class="aum-bar"><div class="aum-bar-fill" style="width:2.8%;background:#1D4ED8"></div></div></div></td>
+            <td class="price-cell neutral" id="price-BITO">—</td>
+            <td>CME先物</td><td>0.95%</td><td>直接保有なし</td><td>2021/10/19</td>
+          </tr>
+          <tr data-type="futures" data-asset="bitcoin">
+            <td><span class="ticker ticker-fut">BTF</span></td>
+            <td>Valkyrie BTC &amp; ETH Strategy ETF</td><td>CoinShares</td>
+            <td><span class="type-badge type-fut">BTC/ETH先物</span></td>
+            <td><div class="aum-bar-wrap"><strong id="aum-BTF">~$45M</strong><div class="aum-bar"><div class="aum-bar-fill" style="width:0.08%;background:#1D4ED8"></div></div></div></td>
+            <td class="price-cell neutral" id="price-BTF">—</td>
+            <td>CME先物</td><td>1.00%</td><td>直接保有なし</td><td>2021/10/22</td>
+          </tr>
+          <tr data-type="futures" data-asset="bitcoin">
+            <td><span class="ticker ticker-fut">XBTF</span></td>
+            <td>VanEck Bitcoin Strategy ETF</td><td>VanEck</td>
+            <td><span class="type-badge type-fut">BTC先物</span></td>
+            <td><div class="aum-bar-wrap"><strong id="aum-XBTF">~$72M</strong><div class="aum-bar"><div class="aum-bar-fill" style="width:0.13%;background:#1D4ED8"></div></div></div></td>
+            <td class="price-cell neutral" id="price-XBTF">—</td>
+            <td>CME先物</td><td>0.66%</td><td>直接保有なし</td><td>2021/11/15</td>
+          </tr>
+          <tr data-type="futures" data-asset="bitcoin">
+            <td><span class="ticker ticker-fut">BITI</span></td>
+            <td>ProShares Short Bitcoin ETF</td><td>ProShares</td>
+            <td><span class="type-badge type-inv">BTC逆張り</span></td>
+            <td><div class="aum-bar-wrap"><strong id="aum-BITI">~$37M</strong><div class="aum-bar"><div class="aum-bar-fill" style="width:0.07%;background:#0F766E"></div></div></div></td>
+            <td class="price-cell neutral" id="price-BITI">—</td>
+            <td>CME先物（ショート）</td><td>0.95%</td><td>直接保有なし</td><td>2022/06/21</td>
+          </tr>
+          <tr data-type="futures" data-asset="bitcoin">
+            <td><span class="ticker ticker-fut">BITX</span></td>
+            <td>2x Bitcoin Strategy ETF</td><td>Volatility Shares</td>
+            <td><span class="type-badge type-lev">2x レバレッジ</span></td>
+            <td><div class="aum-bar-wrap"><strong id="aum-BITX">~$180M</strong><div class="aum-bar"><div class="aum-bar-fill" style="width:0.33%;background:#991B1B"></div></div></div></td>
+            <td class="price-cell neutral" id="price-BITX">—</td>
+            <td>CME先物 (2x)</td><td>1.85%</td><td>直接保有なし</td><td>2023/06/27</td>
+          </tr>
+          <tr data-type="futures" data-asset="ethereum">
+            <td><span class="ticker ticker-fut">AETH</span></td>
+            <td>ProShares Ether Strategy ETF</td><td>ProShares</td>
+            <td><span class="type-badge type-fut" style="background:#EDE9FE;color:#4C1D95;border-color:#DDD6FE">ETH先物</span></td>
+            <td><div class="aum-bar-wrap"><strong id="aum-AETH">~$15M</strong><div class="aum-bar"><div class="aum-bar-fill" style="width:0.03%;background:#7C3AED"></div></div></div></td>
+            <td class="price-cell neutral" id="price-AETH">—</td>
+            <td>CME先物 (ETH)</td><td>0.95%</td><td>直接保有なし</td><td>2023/10/02</td>
+          </tr>
+          <tr data-type="futures" data-asset="ethereum">
+            <td><span class="ticker ticker-fut">BETH</span></td>
+            <td>Bitcoin &amp; Ether Market Cap Weight ETF</td><td>ProShares</td>
+            <td><span class="type-badge type-fut">BTC/ETH先物</span></td>
+            <td><div class="aum-bar-wrap"><strong id="aum-BETH">~$18M</strong><div class="aum-bar"><div class="aum-bar-fill" style="width:0.03%;background:#1D4ED8"></div></div></div></td>
+            <td class="price-cell neutral" id="price-BETH">—</td>
+            <td>CME先物 (BTC+ETH)</td><td>0.95%</td><td>直接保有なし</td><td>2023/10/02</td>
+          </tr>
+          <!-- Altcoins -->
+          <tr data-type="alt" data-asset="solana">
+            <td><span class="ticker ticker-sol">BSOL</span></td>
+            <td>Bitwise Solana Staking ETF</td><td>Bitwise</td>
+            <td><span class="type-badge type-spot" style="background:#F0FDF4;color:#14532D;border-color:#BBF7D0">SOL現物</span></td>
+            <td><div class="aum-bar-wrap"><strong id="aum-BSOL">~$120M</strong><div class="aum-bar"><div class="aum-bar-fill" style="width:0.22%;background:var(--green)"></div></div></div></td>
+            <td class="price-cell neutral" id="price-BSOL">—</td>
+            <td>— (SOL)</td><td>0.20%</td><td>Coinbase Custody</td><td>2025/11</td>
+          </tr>
+          <tr data-type="alt" data-asset="solana">
+            <td><span class="ticker ticker-sol">SOLZ</span></td>
+            <td>21Shares Solana ETF</td><td>21Shares</td>
+            <td><span class="type-badge type-spot" style="background:#F0FDF4;color:#14532D;border-color:#BBF7D0">SOL現物</span></td>
+            <td><div class="aum-bar-wrap"><strong id="aum-SOLZ">~$60M</strong><div class="aum-bar"><div class="aum-bar-fill" style="width:0.11%;background:var(--green)"></div></div></div></td>
+            <td class="price-cell neutral" id="price-SOLZ">—</td>
+            <td>— (SOL)</td><td>0.50%</td><td>Coinbase Custody</td><td>2025/11</td>
+          </tr>
+          <tr data-type="alt" data-asset="litecoin">
+            <td><span class="ticker ticker-ltc">LTCW</span></td>
+            <td>Canary Litecoin ETF</td><td>Canary Capital</td>
+            <td><span class="type-badge type-spot" style="background:#F1F5F9;color:#334155;border-color:#CBD5E1">LTC現物</span></td>
+            <td><div class="aum-bar-wrap"><strong id="aum-LTCW">~$8M</strong><div class="aum-bar"><div class="aum-bar-fill" style="width:0.01%;background:#64748B"></div></div></div></td>
+            <td class="price-cell neutral" id="price-LTCW">—</td>
+            <td>— (LTC)</td><td>0.25%</td><td>—</td><td>2025/11</td>
+          </tr>
+          <tr data-type="alt" data-asset="hedera-hashgraph">
+            <td><span class="ticker ticker-gry">HBAR</span></td>
+            <td>Canary Hedera ETF</td><td>Canary Capital</td>
+            <td><span class="type-badge type-spot" style="background:#F8FAFC;color:#475569;border-color:#E2E8F0">HBAR現物</span></td>
+            <td><div class="aum-bar-wrap"><strong id="aum-HBAR">~$20M</strong><div class="aum-bar"><div class="aum-bar-fill" style="width:0.03%;background:#94A3B8"></div></div></div></td>
+            <td class="price-cell neutral" id="price-HBAR">—</td>
+            <td>— (HBAR)</td><td>0.25%</td><td>—</td><td>2025/11</td>
+          </tr>
+          <tr data-type="alt" data-asset="ripple">
+            <td><span class="ticker ticker-xrp">XRP*</span></td>
+            <td>XRP Spot ETF（審査中）</td><td>Grayscale/Bitwise 他</td>
+            <td><span class="type-badge type-spot" style="background:#E0F2FE;color:#075985;border-color:#BAE6FD">XRP現物</span></td>
+            <td><div class="aum-bar-wrap"><strong>承認待ち</strong><div class="aum-bar"><div class="aum-bar-fill" style="width:0%"></div></div></div></td>
+            <td class="price-cell neutral" id="price-XRP">—</td>
+            <td>承認待ち</td><td>TBD</td><td>申請中</td><td>承認確率85%</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Asset Distribution -->
+  <div class="section-title navy" style="margin-bottom:10px;">アセット別 ETF AUM 分布</div>
+  <div class="asset-dist">
+    <div class="asset-card">
+      <div class="asset-name">BTC 現物 ETF</div>
+      <div class="asset-val" id="adv-btc" style="color:var(--red)">—</div>
+      <div class="asset-bar"><div class="asset-bar-fill" style="width:72%;background:var(--red)"></div></div>
+    </div>
+    <div class="asset-card">
+      <div class="asset-name">ETH 現物 ETF</div>
+      <div class="asset-val" id="adv-eth" style="color:#7C3AED">—</div>
+      <div class="asset-bar"><div class="asset-bar-fill" style="width:11%;background:#7C3AED"></div></div>
+    </div>
+    <div class="asset-card">
+      <div class="asset-name">BTC 先物 ETF</div>
+      <div class="asset-val" style="color:#1D4ED8">~$1.9B</div>
+      <div class="asset-bar"><div class="asset-bar-fill" style="width:1.2%;background:#1D4ED8"></div></div>
+    </div>
+    <div class="asset-card">
+      <div class="asset-name">ETH 先物 ETF</div>
+      <div class="asset-val" style="color:#6D28D9">~$50M</div>
+      <div class="asset-bar"><div class="asset-bar-fill" style="width:0.03%;background:#6D28D9"></div></div>
+    </div>
+    <div class="asset-card">
+      <div class="asset-name">SOL / LTC / HBAR</div>
+      <div class="asset-val" style="color:var(--green)">~$200M</div>
+      <div class="asset-bar"><div class="asset-bar-fill" style="width:0.13%;background:var(--green)"></div></div>
+    </div>
+    <div class="asset-card">
+      <div class="asset-name">レバレッジ / 逆張り</div>
+      <div class="asset-val" style="color:#991B1B">~$220M</div>
+      <div class="asset-bar"><div class="asset-bar-fill" style="width:0.14%;background:#991B1B"></div></div>
+    </div>
+  </div>
+
+  <!-- Notes -->
+  <div class="notes-wrap">
+    <div class="section-title navy" style="margin-bottom:12px;">📌 主な特徴・注意点</div>
+    <div class="notes-grid">
+      <div>
+        <strong style="color:var(--red)">現物（Spot）ETF</strong><br>
+        実際のBTC/ETHをカストディアンが保管。価格追跡精度が高い。2024年1月SEC承認。IBITは史上最大のETF立ち上げ記録を達成。
+      </div>
+      <div>
+        <strong style="color:var(--gold)">先物（Futures）ETF</strong><br>
+        CMEのBTC/ETH先物に投資。コンタンゴによるロールコストに注意。BITOは2021年10月に世界初のBTC先物ETFとして上場。
+      </div>
+      <div>
+        <strong style="color:#991B1B">レバレッジ・逆張り</strong><br>
+        2x レバレッジや逆張りETFも上場中。短期トレーダー向け。長期保有にはデイリーリバランスによる減価リスクあり。
+      </div>
+      <div>
+        <strong style="color:var(--green)">アルトコインETF</strong><br>
+        2025年11月にSOL/LTC/HBARが新規上場。XRP承認確率85%。2026年中にDOGE・ADA・AVAXなどが順次審査される見込み。
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- FOOTER -->
+<footer>
+  価格データ: <a href="https://www.coingecko.com/" target="_blank">CoinGecko API</a> ·
+  為替: <a href="https://open.er-api.com/" target="_blank">Open Exchange Rates API</a> ·
+  ETFデータ: <a href="https://bitbo.io/treasuries/us-etfs/" target="_blank">Bitbo</a> ·
+  <a href="https://www.coinglass.com/etf/bitcoin" target="_blank">CoinGlass</a> ·
+  <a href="https://etfdb.com/etfs/currency/cryptocurrency/" target="_blank">ETF Database</a><br>
+  ※ 本ダッシュボードは情報提供目的のみです。投資助言ではありません。AUMは2026年2月時点の概算値。価格・為替はリアルタイム取得。
+</footer>
+
+<script>
+/* ─── STATE ─── */
+let currency = 'USD';
+let prices   = {};
+let jpyRate  = null;
+let prevPrices = {};
+let countdownSec = 0;
+let countdownTimer = null;
+const INTERVAL_SEC = 3600;
+
+const btcTickers  = ['IBIT','FBTC','GBTC','ARKB','BITB','BTCM','HODL','BTCO','BRRR','EZBC','BTCW','BITO','BTF','XBTF','BITI','BITX','BETH'];
+const ethTickers  = ['ETHA','FETH','ETHE','AETH','BETH'];
+const solTickers  = ['BSOL','SOLZ'];
+const ltcTickers  = ['LTCW'];
+const hbarTickers = ['HBAR'];
+const xrpTickers  = ['XRP'];
+const assetToTickers = {
+  bitcoin: btcTickers, ethereum: ethTickers, solana: solTickers,
+  litecoin: ltcTickers, 'hedera-hashgraph': hbarTickers, ripple: xrpTickers,
+};
+
+/* ─── FORMAT ─── */
+function fmtPrice(usdVal) {
+  if (usdVal == null) return '—';
+  const v   = currency === 'JPY' ? usdVal * (jpyRate || 1) : usdVal;
+  const sym = currency === 'JPY' ? '¥' : '$';
+  if (v >= 1e9)  return sym + (v/1e9).toFixed(2) + 'B';
+  if (v >= 1e6)  return sym + (v/1e6).toFixed(2) + 'M';
+  if (v >= 1000) return sym + Math.round(v).toLocaleString();
+  return sym + (v < 1 ? v.toFixed(4) : v.toFixed(2));
+}
+function fmtChange(pct) {
+  if (pct == null) return '';
+  const sign = pct >= 0 ? '+' : '';
+  const col  = pct >= 0 ? 'var(--green)' : 'var(--red)';
+  return `<span style="color:${col};font-weight:700">${sign}${pct.toFixed(2)}%</span>`;
+}
+
+/* ─── FETCH ─── */
+async function fetchCryptoPrices() {
+  const ids = 'bitcoin,ethereum,solana,litecoin,hedera-hashgraph,ripple';
+  const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`);
+  if (!res.ok) throw new Error('CoinGecko ' + res.status);
+  return res.json();
+}
+async function fetchJPY() {
+  const res = await fetch('https://open.er-api.com/v6/latest/USD');
+  if (!res.ok) throw new Error('FX ' + res.status);
+  const d = await res.json();
+  return d.rates.JPY;
+}
+
+/* ─── MAIN CYCLE ─── */
+async function fetchAll(manual = false) {
+  setStatus('fetching');
+  const btn = document.getElementById('refreshBtn');
+  btn.disabled = true; btn.textContent = '更新中...';
+  try {
+    const [priceData, jpy] = await Promise.all([fetchCryptoPrices(), fetchJPY()]);
+    prevPrices = { ...prices };
+    prices = priceData;
+    jpyRate = jpy;
+    updateUI();
+    setStatus('live');
+    document.getElementById('lastUpdated').textContent =
+      new Date().toLocaleTimeString('ja-JP', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    startCountdown(INTERVAL_SEC);
+  } catch(e) {
+    setStatus('error', e.message);
+    startCountdown(60);
+  } finally {
+    btn.disabled = false; btn.textContent = '⟳ 今すぐ更新';
+  }
+}
+
+/* ─── UPDATE UI ─── */
+function updateUI() {
+  const btc = prices['bitcoin'];
+  const eth = prices['ethereum'];
+  const sol = prices['solana'];
+  const jpy = jpyRate;
+  const sym = currency === 'JPY' ? '¥' : '$';
+
+  /* status bar */
+  document.getElementById('sbBtc').textContent = fmtPrice(btc?.usd);
+  document.getElementById('sbEth').textContent = fmtPrice(eth?.usd);
+  document.getElementById('sbSol').textContent = fmtPrice(sol?.usd);
+  document.getElementById('sbJpy').textContent = jpy ? jpy.toFixed(2) + ' 円' : '—';
+
+  /* price cards */
+  updateCard('val-btcPrice', fmtPrice(btc?.usd), 'bitcoin');
+  updateCard('val-ethPrice', fmtPrice(eth?.usd), 'ethereum');
+  updateCard('val-solPrice', fmtPrice(sol?.usd), 'solana');
+  if (btc) document.getElementById('sub-btcChg').innerHTML = `24h変化: ${fmtChange(btc.usd_24h_change)}`;
+  if (eth) document.getElementById('sub-ethChg').innerHTML = `24h変化: ${fmtChange(eth.usd_24h_change)}`;
+  if (sol) document.getElementById('sub-solChg').innerHTML = `24h変化: ${fmtChange(sol.usd_24h_change)}`;
+
+  /* JPY */
+  const jpyEl = document.getElementById('val-jpyRate');
+  if (jpy) {
+    jpyEl.textContent = jpy.toFixed(2) + ' 円';
+    const prev = parseFloat(jpyEl.dataset.prev || jpy);
+    document.getElementById('sub-jpyChg').innerHTML = `前回比: ${fmtChange((jpy - prev) / prev * 100)}`;
+    jpyEl.dataset.prev = jpy;
+  }
+
+  /* AUM cards */
+  [{ id:'val-totalAum', usdB:151.9 }, { id:'val-ibitAum', usdB:54.1 }].forEach(a => {
+    const el = document.getElementById(a.id);
+    if (!el) return;
+    el.textContent = currency === 'JPY' && jpy
+      ? '¥' + (a.usdB * jpy / 1000).toFixed(1) + '兆円'
+      : '$' + a.usdB + 'B';
+  });
+
+  /* asset dist */
+  const advBtc = document.getElementById('adv-btc');
+  const advEth = document.getElementById('adv-eth');
+  if (advBtc) advBtc.textContent = currency === 'JPY' && jpy ? '¥' + (109 * jpy / 1000).toFixed(0) + '兆円' : '~$109B';
+  if (advEth) advEth.textContent = currency === 'JPY' && jpy ? '¥' + (16.7 * jpy / 1000).toFixed(1) + '兆円' : '~$16.7B';
+
+  /* table price cells */
+  Object.entries(assetToTickers).forEach(([asset, tickers]) => {
+    const p = prices[asset];
+    if (!p) return;
+    const display = currency === 'JPY' ? p.usd * (jpy || 1) : p.usd;
+    const prev = prevPrices[asset]?.usd;
+    const dir = prev == null ? 'neutral' : p.usd > prev ? 'up' : p.usd < prev ? 'down' : 'neutral';
+    const fmtVal = sym + (display >= 1000 ? Math.round(display).toLocaleString() : display < 1 ? display.toFixed(4) : display.toFixed(2));
+    tickers.forEach(t => {
+      const el = document.getElementById('price-' + t);
+      if (!el) return;
+      el.textContent = fmtVal;
+      el.className = 'price-cell ' + dir;
+    });
+  });
+
+  /* chart tooltip */
+  if (aumChart) {
+    aumChart.options.plugins.tooltip.callbacks.label = currency === 'JPY' && jpy
+      ? ctx => ` ¥${(ctx.parsed * jpy / 1000).toFixed(1)}兆円`
+      : ctx => ` $${ctx.parsed}B`;
+    aumChart.update('none');
+  }
+}
+
+function updateCard(id, val, asset) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const old = el.textContent;
+  el.textContent = val;
+  if (old !== val && old !== '—') {
+    const cur  = prices[asset]?.usd;
+    const prev = prevPrices[asset]?.usd;
+    if (cur != null && prev != null) {
+      el.classList.remove('val-up','val-down');
+      void el.offsetWidth;
+      el.classList.add(cur >= prev ? 'val-up' : 'val-down');
+    }
+  }
+}
+
+/* ─── STATUS ─── */
+function setStatus(s, msg) {
+  const dot  = document.getElementById('liveDot');
+  const text = document.getElementById('statusText');
+  dot.className = 'live-dot';
+  if (s === 'live')     { text.textContent = 'ライブ接続中'; }
+  else if (s === 'fetching') { dot.classList.add('fetching'); text.textContent = 'データ取得中...'; }
+  else if (s === 'error')    { dot.classList.add('error');    text.textContent = 'エラー: ' + (msg || ''); }
+}
+
+/* ─── COUNTDOWN（分表示）─── */
+function startCountdown(sec) {
+  clearInterval(countdownTimer);
+  countdownSec = sec;
+  const el = document.getElementById('countdownNum');
+  el.textContent = Math.ceil(countdownSec / 60);
+  countdownTimer = setInterval(() => {
+    countdownSec--;
+    el.textContent = Math.max(1, Math.ceil(countdownSec / 60));
+    if (countdownSec <= 0) { clearInterval(countdownTimer); fetchAll(); }
+  }, 1000);
+}
+
+/* ─── CURRENCY ─── */
+function setCurrency(cur) {
+  currency = cur;
+  document.getElementById('btnUSD').classList.toggle('active', cur === 'USD');
+  document.getElementById('btnJPY').classList.toggle('active', cur === 'JPY');
+  if (Object.keys(prices).length > 0) updateUI();
+}
+
+/* ─── FILTER ─── */
+function filterRows(type) {
+  document.querySelectorAll('#mainTable tbody tr').forEach(r => {
+    r.classList.toggle('hidden-row', type !== 'all' && r.dataset.type !== type);
+  });
+  document.querySelectorAll('.pill').forEach(p => p.classList.add('inactive'));
+  const map = { all:'pill-all', spot:'pill-spot', futures:'pill-fut', alt:'pill-alt' };
+  document.querySelectorAll(`.${map[type]}`).forEach(p => {
+    p.classList.remove('inactive');
+    p.classList.add('active');
+  });
+}
+
+/* ─── CHARTS ─── */
+let aumChart;
+(function initCharts() {
+  const GRID = 'rgba(0,0,0,0.06)';
+  const TICK = '#6B7280';
+
+  /* Doughnut */
+  aumChart = new Chart(document.getElementById('aumChart').getContext('2d'), {
+    type: 'doughnut',
+    data: {
+      labels: ['IBIT (BlackRock)','FBTC (Fidelity)','GBTC (Grayscale)','BTC Mini','BITB (Bitwise)','ARKB (ARK)','その他'],
+      datasets: [{
+        data: [54.1,12.0,10.5,3.4,2.6,2.4,7.5],
+        backgroundColor: ['#CA142A','#0D1F3C','#6B7280','#9CA3AF','#B8960C','#1A6B3C','#D1D5DB'],
+        borderColor: '#fff', borderWidth: 2, hoverOffset: 5
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: {
+        legend: { position:'right', labels:{ color:TICK, font:{size:11}, boxWidth:12, padding:9 } },
+        tooltip: { callbacks:{ label: ctx => ` $${ctx.parsed}B` } }
+      }
+    }
+  });
+
+  /* Holdings Bar */
+  new Chart(document.getElementById('holdingsChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: ['IBIT','FBTC','GBTC','BTC Mini','BITB','ARKB','HODL','BTCO','BRRR','EZBC','BTCW'],
+      datasets: [{
+        label: 'BTC保有量',
+        data: [761802,189011,156719,50223,38286,35502,16298,6554,6069,5871,1875],
+        backgroundColor: ['#CA142A','#0D1F3C','#6B7280','#9CA3AF','#B8960C','#1A6B3C','#1D4ED8','#D97706','#7C3AED','#0F766E','#CBD5E1'],
+        borderRadius: 2, borderSkipped: false
+      }]
+    },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: true,
+      plugins: {
+        legend: { display:false },
+        tooltip: { callbacks:{ label: ctx => ` ${ctx.parsed.x.toLocaleString()} BTC` } }
+      },
+      scales: {
+        x: { ticks:{ color:TICK, font:{size:10}, callback: v => v>=1000?(v/1000)+'K':v }, grid:{ color:GRID } },
+        y: { ticks:{ color:'#1A1A1A', font:{size:10} }, grid:{ display:false } }
+      }
+    }
+  });
+
+  /* Inflows */
+  new Chart(document.getElementById('inflowChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: ["Jan'24",'Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec',"Jan'25",'Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec',"Jan'26"],
+      datasets: [{
+        label: 'BTC Spot ETF 純流入 (億$)',
+        data: [19.6,6.0,12.3,-1.2,2.1,-6.5,3.2,-8.8,-3.4,5.5,6.2,4.8,4.7,1.8,3.5,-2.2,2.7,-5.5,1.9,-3.2,2.4,3.1,2.8,4.5,4.7],
+        backgroundColor: ctx => ctx.parsed.y >= 0 ? 'rgba(202,20,42,0.75)' : 'rgba(107,114,128,0.6)',
+        borderRadius: 2
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: {
+        legend: { labels:{ color:TICK } },
+        tooltip: { callbacks:{ label: ctx => ` ${ctx.parsed.y>0?'+':''}${ctx.parsed.y}億ドル` } }
+      },
+      scales: {
+        x: { ticks:{ color:TICK, font:{size:9}, maxRotation:45 }, grid:{ color:GRID } },
+        y: { ticks:{ color:TICK, font:{size:10} }, grid:{ color:GRID }, title:{ display:true, text:'億ドル', color:TICK } }
+      }
+    }
+  });
+})();
+
+/* ─── BOOT ─── */
+setStatus('fetching');
+fetchAll();
+</script>
+</body>
+</html>
